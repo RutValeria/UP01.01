@@ -1,85 +1,106 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
-using System.Runtime.Remoting.Contexts;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
-using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
-using System.Windows.Shapes;
 
 namespace UP01._01.Pages
 {
-    /// <summary>
-    /// Логика взаимодействия для AddRequestPage.xaml
-    /// </summary>
-    public partial class AddRequestPage : Page
-    {
-        private Entities context;
-        private Requests _currentRequests = new Requests();
-        public AddRequestPage(object value)
-        {
-            InitializeComponent();
-            DataContext = _currentRequests;
-            context = new Entities();
-            LoadComboBoxes();
-        }
-        private void LoadComboBoxes()
-        {
-            CmbEquipment.ItemsSource = context.Equipment.ToList();
-            CmbEquipment.DisplayMemberPath = "EquipmentName";
-            CmbEquipment.SelectedValuePath = "EquipmentID";
+	public partial class AddRequestPage : Page
+	{
+		private Requests _currentRequests = new Requests();
+		public bool flag = true;
 
-            CmbProblem.ItemsSource = context.Problems.ToList();
-            CmbProblem.DisplayMemberPath = "Description";
-            CmbProblem.SelectedValuePath = "ProblemID";
+		public AddRequestPage(Requests selectedRequests)
+		{
+			InitializeComponent();
 
-            CmbClient.ItemsSource = context.Clients.ToList();
-            CmbClient.DisplayMemberPath = "Name";
-            CmbClient.SelectedValuePath = "ClientID";
+			if (selectedRequests != null)
+			{
+				flag = false;
+				_currentRequests = selectedRequests;
+				CmbClient.SelectedIndex = selectedRequests.ClientID - 1;
+				CmbEquipment.SelectedIndex = selectedRequests.EquipmentID - 1;
+				CmbProblem.SelectedIndex = selectedRequests.ProblemID - 1;
+				CmbStaff.SelectedIndex = selectedRequests.StaffID - 1;
+				CmbStatus.SelectedIndex = selectedRequests.StatusID - 1;
+			}
 
-            CmbStatus.ItemsSource = context.RequestStatuses.ToList();
-            CmbStatus.DisplayMemberPath = "StatusName";
-            CmbStatus.SelectedValuePath = "StatusID";
+			DataContext = _currentRequests;
 
-            CmbStaff.ItemsSource = context.Staff.ToList();
-            CmbStaff.DisplayMemberPath = "StaffName";
-            CmbStaff.SelectedValuePath = "StaffID";
-        }
+			var context = Entities.GetContext();
+			CmbClient.ItemsSource = context.Clients.Distinct().ToList();
+			CmbEquipment.ItemsSource = context.Equipment.Distinct().ToList();
+			CmbProblem.ItemsSource = context.Problems.Distinct().ToList();
+			CmbStaff.ItemsSource = context.Staff.Distinct().ToList();
+			CmbStatus.ItemsSource = context.RequestStatuses.Distinct().ToList();
+		}
 
-        private void ButtonSave_Click(object sender, RoutedEventArgs e)
-        {
-            StringBuilder errors = new StringBuilder();
-            // Проверяем переменную errors на наличие ошибок
-            if (errors.Length > 0)
-            {
-                MessageBox.Show(errors.ToString());
-                return;
-            }
-            // Добавляем в объект Requests новую запись
-            if (_currentRequests.RequestID == 0)
-                Entities.GetContext().Requests.Add(_currentRequests);
-            // Делаем попытку записи данных в БД о новом пользователе
-            try
-            {
-                Entities.GetContext().SaveChanges();
-                MessageBox.Show("Данные успешно сохранены!");
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show(ex.Message.ToString());
-            }
-        }
+		private void ButtonSave_Click(object sender, RoutedEventArgs e)
+		{
+			MessageBoxResult result;
 
-        private void ButtonCancel_Click(object sender, RoutedEventArgs e)
-        {
-            NavigationService?.Navigate(new RequestsPage());
-        }
-    }
+			if (flag)
+			{
+				result = MessageBox.Show("Вы уверены что хотите добавить эти данные?", "Подтвержение добавления", MessageBoxButton.YesNo, MessageBoxImage.Warning);
+				if (result == MessageBoxResult.Yes)
+				{
+					using (Entities db = new Entities())
+					{
+						Requests newRequest = new Requests
+						{
+							RequestDate = DateTime.Parse(TBDate.Text),
+							EquipmentID = CmbEquipment.SelectedIndex + 1,
+							ProblemID = CmbProblem.SelectedIndex + 1,
+							ProblemDescription = TBOpis.Text,
+							ClientID = CmbClient.SelectedIndex + 1,
+							StatusID = CmbStatus.SelectedIndex + 1,
+							StaffID = CmbStaff.SelectedIndex + 1,
+						};
+
+						db.Requests.Add(newRequest);
+						db.SaveChanges();
+						MessageBox.Show("Заявка добавлена");
+					}
+				}
+			}
+			else
+			{
+				result = MessageBox.Show("Вы уверены что хотите сохранить эти данные?", "Подтвержение сохранения", MessageBoxButton.YesNo, MessageBoxImage.Warning);
+				if (result == MessageBoxResult.Yes)
+				{
+					try
+					{
+						using (Entities db = new Entities())
+						{
+							// Обновляем существующий запрос
+							var requestToUpdate = db.Requests.Find(_currentRequests.RequestID); // Предполагаем, что у вас есть ID
+							if (requestToUpdate != null)
+							{
+								requestToUpdate.RequestDate = DateTime.Parse(TBDate.Text);
+								requestToUpdate.EquipmentID = CmbEquipment.SelectedIndex + 1;
+								requestToUpdate.ProblemID = CmbProblem.SelectedIndex + 1;
+								requestToUpdate.ProblemDescription = TBOpis.Text;
+								requestToUpdate.ClientID = CmbClient.SelectedIndex + 1;
+								requestToUpdate.StatusID = CmbStatus.SelectedIndex + 1;
+								requestToUpdate.StaffID = CmbStaff.SelectedIndex + 1;
+								db.SaveChanges();
+								MessageBox.Show("Данные успешно сохранены!");
+							}
+						}
+					}
+					catch (Exception ex)
+					{
+						MessageBox.Show("Ошибка при сохранении данных: " + ex.Message);
+					}
+				}
+			}
+
+			NavigationService.GoBack();
+		}
+
+		private void ButtonCancel_Click(object sender, RoutedEventArgs e)
+		{
+			NavigationService?.Navigate(new RequestsPage());
+		}
+	}
 }

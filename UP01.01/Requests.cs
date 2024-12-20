@@ -15,13 +15,13 @@ namespace UP01._01
     public partial class Requests
     {
         public int RequestID { get; set; }
-        public Nullable<System.DateTime> RequestDate { get; set; }
-        public Nullable<int> EquipmentID { get; set; }
-        public Nullable<int> ProblemID { get; set; }
+        public System.DateTime RequestDate { get; set; }
+        public int EquipmentID { get; set; }
+        public int ProblemID { get; set; }
         public string ProblemDescription { get; set; }
-        public Nullable<int> ClientID { get; set; }
-        public Nullable<int> StatusID { get; set; }
-        public Nullable<int> StaffID { get; set; }
+        public int ClientID { get; set; }
+        public int StatusID { get; set; }
+        public int StaffID { get; set; }
     
         public virtual Clients Clients { get; set; }
         public virtual Equipment Equipment { get; set; }
