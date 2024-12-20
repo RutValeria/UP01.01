@@ -5,8 +5,18 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:UP01._01"
         mc:Ignorable="d"
-        Title="MainWindow" Height="450" Width="800">
+        Title="MainWindow" Height="600" Width="1200" Closing="MainWindow_Closing">
     <Grid>
-        
+        <Grid.RowDefinitions>
+            <RowDefinition Height="45"></RowDefinition>
+            <RowDefinition Height="*"></RowDefinition>
+            <RowDefinition Height="45"></RowDefinition>
+        </Grid.RowDefinitions>
+        <Button x:Name="ButtonBack" Content="Назад" HorizontalAlignment="Left" Grid.Row="0" Margin="10,0,0,0" VerticalAlignment="Center" Width="70" Height="25" Click="ButtonBack_OnClick"/>
+        <Frame x:Name="MainFrame" Grid.Row="1"
+           HorizontalAlignment="Stretch"
+           VerticalAlignment="Stretch"
+           Source="Pages/AuthPage.xaml"
+           Navigated="MainFrame_OnNavigated" NavigationUIVisibility="Hidden"/>
     </Grid>
 </Window>
